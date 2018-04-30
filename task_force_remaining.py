@@ -2,9 +2,6 @@
 
 # input variables
 conduit_api_key = '/home/dfelinto/.conduit-dev.b.o'
-multi_object_tasks = 54641
-copy_on_write_tasks = 54810
-
 
 import requests
 manifest_url = "https://developer.blender.org/api/maniphest.info"
@@ -18,7 +15,7 @@ headers = {'Content-Type': 'application/json'}
 
 def get_tasks(task_id):
     """
-    Return all the children tasks for a given task id.
+    Return all the children tasks ids for a task id
     """
     params = {
         'api.token': api_token,
@@ -47,6 +44,9 @@ def get_tasks(task_id):
 
 
 def get_tasks_content(tasks):
+    """
+    Return the raw content of given tasks
+    """
     params = {
         'api.token': api_token,
     }
@@ -66,6 +66,10 @@ def get_tasks_content(tasks):
 
 
 def extract_info(raw_text):
+    """
+    Process the blob of all tasks
+    Returns a tuple with done and total ammount of tasks.
+    """
     import re
     all_operators = re.compile('_OT_')
     done_operators = re.compile('~~.*_OT_.*~~')
@@ -77,22 +81,31 @@ def extract_info(raw_text):
 
 
 def get_main_task_id():
-    # TODO get this from cli
-    multi_object_tasks = 54641
-    copy_on_write_tasks = 54810
-    tasks = multi_object_tasks
-    tasks = copy_on_write_tasks
+    """
+    Parse input
+    We get the main task id from command-line.
+    """
+    import argparse
+    parser = argparse.ArgumentParser("task_force_remaining")
+    parser.add_argument("task_id", help=
+    "The task number for the task force (e.g., 54641 for multi-object or 54810 for copy-on-write)"
+    , type=int)
+    args = parser.parse_args()
 
-    return tasks
+    return args.task_id
 
 
 def main():
+    """
+    Return (print) the remaining tasks for a given task-force.
+    """
     main_task_id = get_main_task_id()
     tasks = get_tasks(main_task_id)
     content = get_tasks_content(tasks)
     count_done, count_all = extract_info(content)
 
-    print(count_done, count_all)
+    remaining_tasks = count_all - count_done
+    print(remaining_tasks)
 
 
 if __name__ == '__main__':
