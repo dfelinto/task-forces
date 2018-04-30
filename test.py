@@ -2,27 +2,24 @@
 
 # input variables
 conduit_api_key = '/home/dfelinto/.conduit-dev.b.o'
-
 multi_object_tasks = 54641
 copy_on_write_tasks = 54810
+
 
 import requests
 manifest_url = "https://developer.blender.org/api/maniphest.info"
 phid_url = "https://developer.blender.org/api/phid.lookup"
 
+
+# Settings required for all the requests calls.
 api_token = open(conduit_api_key).read().rstrip()
+headers = {'Content-Type': 'application/json'}
 
 
 def get_tasks(task_id):
     """
     Return all the children tasks for a given task id.
     """
-    api_token = open(conduit_api_key).read().rstrip()
-
-    headers = {
-        'Content-Type': 'application/json',
-    }
-
     params = {
         'api.token': api_token,
         'task_id': task_id,
@@ -33,8 +30,6 @@ def get_tasks(task_id):
 
     params = {
         'api.token': api_token,
-        'names[0]': tasks_phids[0],
-        'names[1]': tasks_phids[1],
     }
 
     for i, task_phid in enumerate(tasks_phids):
@@ -51,19 +46,12 @@ def get_tasks(task_id):
     return tasks
 
 
-def main():
-    headers = {
-        'Content-Type': 'application/json',
-    }
-
+def get_tasks_content(tasks):
     params = {
         'api.token': api_token,
     }
 
-    # TODO get this from cli
-    tasks = get_tasks(multi_object_tasks)
-    #tasks = get_tasks(copy_on_write_tasks)
-
+    results = []
     for task_id in tasks:
         params['task_id'] = task_id
 
@@ -73,8 +61,40 @@ def main():
         if result['error_code'] is not None:
             print("Error: {0}".format(result['error_info']))
         else:
-            print(result['result']['description'])
+            results.append(result['result']['description'])
+    return "".join(results)
+
+
+def extract_info(raw_text):
+    import re
+    all_operators = re.compile('_OT_')
+    done_operators = re.compile('~~.*_OT_.*~~')
+
+    count_done = len(done_operators.findall(raw_text))
+    count_all = len(all_operators.findall(raw_text))
+
+    return count_done, count_all
+
+
+def get_main_task_id():
+    # TODO get this from cli
+    multi_object_tasks = 54641
+    copy_on_write_tasks = 54810
+    tasks = multi_object_tasks
+    tasks = copy_on_write_tasks
+
+    return tasks
+
+
+def main():
+    main_task_id = get_main_task_id()
+    tasks = get_tasks(main_task_id)
+    content = get_tasks_content(tasks)
+    count_done, count_all = extract_info(content)
+
+    print(count_done, count_all)
 
 
 if __name__ == '__main__':
     main()
+
