@@ -5,6 +5,8 @@ This is a main Python script and some bash crontab scripts to be used together w
 ## Instalation
 * Install grafista in the server.
 * See configurations to customize your database.
+* Update the example crontab scripts to your project.
+* Try executing them before setting up crontab.
 * Install your updated scripts with `crontab -e`.
 
 For example for daily updates at 2am: `0  2 * * * PATH_TO_THIS_REPO/crontab/update_multi_object.sh`
